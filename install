@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo Installing gmigrate...
+echo making symbolic link
+ln -s $(pwd)/gmigrate /usr/local/bin/gmigrate
+echo done

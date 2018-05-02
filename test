@@ -1,0 +1,45 @@
+#!/bin/bash
+
+RED='\033[0;31m'
+GRN='\033[1;32m'
+WRN='\033[1;33m'
+CLR='\033[0m'
+
+# pass title, val, then expected
+test () {
+  title=$1
+  val=$2
+  expected=$3
+
+  if [ "$val" == "$expected" ]; then
+    printf "${GRN}PASSED: ${title}${CLR}\n"
+  else
+    printf "${RED}FAILED: ${title}${CLR}\n"
+    printf "${WRN}Received: ${CLR}"
+    printf "${RED}${val}${CLR}\n"
+    printf "${WRN}Expected: ${CLR}"
+    printf "${expected}"
+    echo
+  fi
+}
+
+mkdir test_project
+clear
+
+# test init
+cd test_project
+test "should init folder" "$(gmigrate init)" "Initializing folder..."
+test "shouldn't rerun init" "$(gmigrate init)" ".gmigrate exists. This project is already initialized."
+test "should create default .gmigrate config file" "$(cat .gmigrate)" $'migrations=migrations\ngschemas=gschemas'
+
+# test usage
+test "should show usage by default" "$(gmigrate)" $'Usage:\n  gmigrate init|run\n  gmigrate add <schema> [procedure]'
+
+# test add command
+
+
+
+# clean up
+echo
+cd ..
+rm -rf test_project

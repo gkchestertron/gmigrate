@@ -1,0 +1,65 @@
+#!/bin/bash
+
+cmd=$1
+schema=$2
+proc=$3
+
+# Usage
+if [ -z "$cmd" ]; then
+  echo Usage:
+  echo '  gmigrate init|run'
+  echo '  gmigrate add <schema> [procedure]'
+  exit
+fi
+
+# init
+if [ "$cmd" == "init" ]; then
+  if [ -f .gmigrate ]; then
+    echo .gmigrate exists. This project is already initialized.
+    exit
+  fi
+
+  echo Initializing folder...
+
+  # make gmigrate config and folder
+  echo migrations=migrations > .gmigrate
+  echo gschemas=gschemas >> .gmigrate
+  mkdir gschemas
+
+  exit
+fi
+
+# fail if not initialized
+if [ ! -f .gmigrate ]; then
+  echo There is no .gmigrate config. Either you are not in the root of your project or the project has not been initialized.
+  echo "If you would like to initialize this folder, please run 'gmigrate init'."
+# source the config if we have it
+else
+  source .gmigrate
+fi
+
+# add schema/proc
+if [ "$cmd" == "add" ]; then
+  # just the schema
+  if [ -z "$schema" ]; then
+    echo Please provide a schema.
+  else
+    mkdir -p $gschemas/$schema
+    touch $gschemas/$schema/up.sql
+    touch $gschemas/$schema/down.sql
+    mkdir -p $gschemas/$schema/procedures
+
+    if [ ! -z "$proc" ]; then
+      touch $gschemas/$schema/procedures/$proc.sql
+    fi
+  fi
+  exit
+fi
+
+# generate migrations
+if [ "$cmd" == "run" ]; then
+  echo running!
+  exit
+fi
+
+echo command "$cmd" not recongnized
