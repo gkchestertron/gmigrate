@@ -99,7 +99,7 @@ if [ "$cmd" == "run" ]; then
     fi
 
     # procedures
-    if [ ! -z "$(echo $file | grep '/procedures/')" ]; then
+    if [ ! -z "$(echo $file | grep '/procedures/' | grep '.sql')" ]; then
       echo "-- $file" >> $migname-up.sql
       cat $file >> $migname-up.sql
       echo "" >> $migname-up.sql
