@@ -3,6 +3,7 @@
 cmd=$1
 schema=$2
 proc=$3
+defaultproc=$'CREATE OR REPLACE FUNCTION %SCHEMA%.%PROC%() RETURNS void AS $$\nBEGIN\n  -- logic\nEND;\n$$ LANGUAGE plpgsql;'
 
 # Usage
 if [ -z "$cmd" ]; then
@@ -40,25 +41,58 @@ fi
 
 # add schema/proc
 if [ "$cmd" == "add" ]; then
-  # just the schema
+  # no schema
   if [ -z "$schema" ]; then
     echo Please provide a schema.
-  else
+    exit 1
+  # schema only
+  elif [ -z "$proc" ]; then
+    echo "Adding schema \"$schema\"..."
     mkdir -p $gschemas/$schema
     touch $gschemas/$schema/up.sql
     touch $gschemas/$schema/down.sql
     mkdir -p $gschemas/$schema/procedures
+  # procedure
+  elif [ -d $gschemas/$schema ]; then
+    echo "Adding procedure \"$proc\" to schema \"$schema\"..."
+    if [ ! -f $gschemas/$schema/$proc.sql ]; then
 
-    if [ ! -z "$proc" ]; then
-      touch $gschemas/$schema/procedures/$proc.sql
+      echo "${defaultproc}" > $gschemas/$schema/procedures/$proc.sql
+    else
+      echo "Proc $proc already exists"
+      exit 1
     fi
+  else
+    echo "Schema $schema does not exist."
+    exit 1
   fi
+
   exit
 fi
 
 # generate migrations
 if [ "$cmd" == "run" ]; then
-  echo running!
+  migname="$(date +%s)"
+  files=`git diff HEAD --name-only | grep "$gschemas"`
+
+  # append the things to the ups and downs
+  for file in ${files[@]}; do
+    # ups
+    if [ ! -z "$(echo $file | grep 'up.sql')" ]; then
+
+    fi
+
+    # downs
+    if [ ! -z "$(echo $file | grep 'down.sql')" ]; then
+    
+    fi
+
+    # procedures
+    if [ ! -z "$(echo $file | grep '/procedures/')" ]; then
+
+    fi
+  done
+
   exit
 fi
 

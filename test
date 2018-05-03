@@ -28,16 +28,24 @@ clear
 
 # test init
 cd test_project
+echo Testing init
 test "should init folder" "$(gmigrate init)" "Initializing folder..."
 test "shouldn't rerun init" "$(gmigrate init)" ".gmigrate exists. This project is already initialized."
 test "should create default .gmigrate config file" "$(cat .gmigrate)" $'migrations=migrations\ngschemas=gschemas'
+test "should create gschemas folder" "$(ls | grep gschemas)" "gschemas"
 
 # test usage
 test "should show usage by default" "$(gmigrate)" $'Usage:\n  gmigrate init|run\n  gmigrate add <schema> [procedure]'
 
 # test add command
+test "should add a schema folder" "$(gmigrate add private)" "Adding schema \"private\"..."
+test "new schema folder should exist" "$(ls gschemas)" "private"
+test "new schema folder should contain up, down, and procdures" "$(ls gschemas/private)" $'down.sql\nprocedures\nup.sql'
+test "should add a new procedure" "$(gmigrate add private doTheThing)" 'Adding procedure "doTheThing" to schema "private"...'
+test "procedure should have default sql if empty" "$(cat gschemas/private/procedures/doTheThing.sql)" $'CREATE OR REPLACE FUNCTION %SCHEMA%.%PROC%() RETURNS void AS $$\nBEGIN\n  -- logic\nEND;\n$$ LANGUAGE plpgsql;'
+test "should fail if schema does not exist" "$(gmigrate add public doTheThing)" "Schema public does not exist."
 
-
+# test run command
 
 # clean up
 echo
