@@ -36,7 +36,7 @@ $ gmigrate add <schema name> <procedure name>
 This will add a procedure to a schema folder (unless it does not exist) with default syntax for writing a procedure (in PL/pgSQL).
 
 ### Writing ups, downs, and procedures
-As a nicety, gmigrate allows you to use tokens for schema name and procedure name. For `schema` the token is `%schema%` and for procedure, it is %proc% - these may change if I find they weren't unique enough choices.
+As a nicety, gmigrate allows you to use tokens for schema name and procedure name. For `schema` the token is `%schema%` and for `procedure`, it is `%proc%` - these may change if I find they weren't unique enough choices.
 
 ### Generating migrations
 To generate a migration from your changes, just run:

@@ -3,7 +3,7 @@
 cmd=$1
 schema=$2
 proc=$3
-defaultproc=$'CREATE OR REPLACE FUNCTION %SCHEMA%.%PROC%() RETURNS void AS $$\nBEGIN\n  -- logic\nEND;\n$$ LANGUAGE plpgsql;'
+defaultproc=$'CREATE OR REPLACE FUNCTION %schema%.%proc%() RETURNS void AS $$\nBEGIN\n  -- logic\nEND;\n$$ LANGUAGE plpgsql;'
 
 # Usage
 if [ -z "$cmd" ]; then
