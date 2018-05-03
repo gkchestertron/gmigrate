@@ -72,24 +72,34 @@ fi
 
 # generate migrations
 if [ "$cmd" == "run" ]; then
-  migname="$(date +%s)"
-  files=`git diff HEAD --name-only | grep "$gschemas"`
+  migname="$migrations/$(date +%s)"
+  files=`git status -s | grep gschemas | sed -E "s/^.*($gschemas)/\1/"`
 
   # append the things to the ups and downs
   for file in ${files[@]}; do
     # ups
     if [ ! -z "$(echo $file | grep 'up.sql')" ]; then
-
+      echo "-- $file" >> $migname-up.sql
+      cat $file >> $migname-up.sql
     fi
 
     # downs
     if [ ! -z "$(echo $file | grep 'down.sql')" ]; then
-    
+      echo "-- $file" >> $migname-down.sql
+      cat $file >> $migname-down.sql
     fi
 
     # procedures
     if [ ! -z "$(echo $file | grep '/procedures/')" ]; then
+      echo "-- $file" >> $migname-up.sql
+      cat $file >> $migname-up.sql
 
+      # down is just old version of proc
+      procdown=`git show HEAD:$file`
+      if [ ! -z "$procdown" ]; then
+        echo "-- $file" >> $migname-down.sql
+        echo "${procdown}" >> $migname-down.sql
+      fi
     fi
   done
 
