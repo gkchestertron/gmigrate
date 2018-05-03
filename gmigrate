@@ -72,8 +72,15 @@ fi
 
 # generate migrations
 if [ "$cmd" == "run" ]; then
-  migname="$migrations/$(date +%s)"
+  echo Generating migration files...
+  headhash="$(git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/")"
+  migname="$migrations/$(date +%s)-$headhash"
   files=`git status -s | grep gschemas | sed -E "s/^.*($gschemas)/\1/"`
+
+  # remove any migrations on the same hash
+  for f in $(ls $migrations | grep $headhash); do
+    rm $migrations/$f
+  done
 
   # append the things to the ups and downs
   for file in ${files[@]}; do
@@ -81,24 +88,28 @@ if [ "$cmd" == "run" ]; then
     if [ ! -z "$(echo $file | grep 'up.sql')" ]; then
       echo "-- $file" >> $migname-up.sql
       cat $file >> $migname-up.sql
+      echo "" >> $migname-up.sql
     fi
 
     # downs
     if [ ! -z "$(echo $file | grep 'down.sql')" ]; then
       echo "-- $file" >> $migname-down.sql
       cat $file >> $migname-down.sql
+      echo "" >> $migname-down.sql
     fi
 
     # procedures
     if [ ! -z "$(echo $file | grep '/procedures/')" ]; then
       echo "-- $file" >> $migname-up.sql
       cat $file >> $migname-up.sql
+      echo "" >> $migname-up.sql
 
       # down is just old version of proc
-      procdown=`git show HEAD:$file`
+      procdown=`git show HEAD:$file 2> /dev/null`
       if [ ! -z "$procdown" ]; then
         echo "-- $file" >> $migname-down.sql
         echo "${procdown}" >> $migname-down.sql
+      echo "" >> $migname-down.sql
       fi
     fi
   done
