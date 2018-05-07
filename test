@@ -23,11 +23,15 @@ test () {
   fi
 }
 
-mkdir test_project
+# setup
+rm -rf ../test_project
+mkdir ../test_project
+mkdir ../test_project/migrations
+cd ../test_project
+git init
 clear
 
 # test init
-cd test_project
 echo Testing init
 test "should init folder" "$(gmigrate init)" "Initializing folder..."
 test "shouldn't rerun init" "$(gmigrate init)" ".gmigrate exists. This project is already initialized."
@@ -37,17 +41,22 @@ test "should create gschemas folder" "$(ls | grep gschemas)" "gschemas"
 # test usage
 test "should show usage by default" "$(gmigrate)" $'Usage:\n  gmigrate init|run\n  gmigrate add <schema> [procedure]'
 
+# add initial commit
+git add -A > /dev/null
+git commit -m "initial commit" > /dev/null
+
 # test add command
 test "should add a schema folder" "$(gmigrate add private)" "Adding schema \"private\"..."
 test "new schema folder should exist" "$(ls gschemas)" "private"
 test "new schema folder should contain up, down, and procdures" "$(ls gschemas/private)" $'down.sql\nprocedures\nup.sql'
 test "should add a new procedure" "$(gmigrate add private doTheThing)" 'Adding procedure "doTheThing" to schema "private"...'
-test "procedure should have default sql if empty" "$(cat gschemas/private/procedures/doTheThing.sql)" $'CREATE OR REPLACE FUNCTION %SCHEMA%.%PROC%() RETURNS void AS $$\nBEGIN\n  -- logic\nEND;\n$$ LANGUAGE plpgsql;'
+test "procedure should have default sql if empty" "$(cat gschemas/private/procedures/doTheThing.sql)" $'CREATE OR REPLACE FUNCTION %schema%.%proc%() RETURNS void AS $$\nBEGIN\n  -- logic\nEND;\n$$ LANGUAGE plpgsql;'
 test "should fail if schema does not exist" "$(gmigrate add public doTheThing)" "Schema public does not exist."
 
 # test run command
+test "shoud run the gmigrate run command" "$(gmigrate run)" "Generating migration files..."
+test "should generate up and down migrations" "$(ls -1 migrations/ | wc -l | xargs)" "2"
 
 # clean up
 echo
 cd ..
-rm -rf test_project
