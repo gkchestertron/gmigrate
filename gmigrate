@@ -74,8 +74,8 @@ fi
 if [ "$cmd" == "run" ]; then
   echo Generating migration files...
   headhash="$(git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/\1/")"
-  migname="$migrations/$(date +%s)-$headhash"
-  files=`git ls-files --other --modified --exclude-standard | grep gschemas | sed -E "s/^.*($gschemas)/\1/"`
+  migname="$migrations/$(date +%s)_$headhash"
+  files=`git ls-files --other --modified --exclude-standard | grep $gschemas | grep -vE '.swp|.swo' | sed -E "s/^.*($gschemas)/\1/"`
 
   # remove any migrations on the same hash
   for f in $(ls $migrations | grep $headhash); do
@@ -84,40 +84,45 @@ if [ "$cmd" == "run" ]; then
 
   # append the things to the ups and downs
   for file in ${files[@]}; do
+    folder=`echo $file | sed -E "s/^.*$gschemas\/(.*)\/.*/\1/"`
+
     # ups
     if [ ! -z "$(echo $file | grep 'up.sql')" ]; then
       if [ -f $file ]; then
-        echo "-- $file" >> $migname-up.sql
-        cat $file >> $migname-up.sql
-        echo "" >> $migname-up.sql
+        echo "-- $file" >> $migname.up.sql
+        cat $file | sed "s/%schema%/$folder/g" >> $migname.up.sql
+        echo "" >> $migname.up.sql
       fi
     fi
 
     # downs
     if [ ! -z "$(echo $file | grep 'down.sql')" ]; then
       if [ -f $file ]; then
-        echo "-- $file" >> $migname-down.sql
-        cat $file >> $migname-down.sql
-        echo "" >> $migname-down.sql
+        echo "-- $file" >> $migname.down.sql
+        cat $file | sed "s/%schema%/$folder/g" >> $migname.down.sql
+        echo "" >> $migname.down.sql
       fi
     fi
   done
 
   # then procedures
   for file in ${files[@]}; do
+    folder=`echo $file | sed -E "s/^.*gschemas\/(.*)\/.*/\1/"`
+    filename=`echo "${file##*/}" | sed 's/\.sql//'`
+
     if [ ! -z "$(echo $file | grep '/procedures/' | grep '.sql')" ]; then
       if [ -f $file ]; then
-        echo "-- $file" >> $migname-up.sql
-        cat $file >> $migname-up.sql
-        echo "" >> $migname-up.sql
+        echo "-- $file" >> $migname.up.sql
+        cat $file | sed "s/%schema%/$folder/g" | sed "s/%proc%/$filename/" >> $migname.up.sql
+        echo "" >> $migname.up.sql
       fi
 
       # down is just old version of proc
       procdown=`git show HEAD:$file 2> /dev/null`
       if [ ! -z "$procdown" ]; then
-        echo "-- $file" >> $migname-down.sql
-        echo "${procdown}" >> $migname-down.sql
-      echo "" >> $migname-down.sql
+        echo "-- $file" >> $migname.down.sql
+        echo "${procdown}" >> $migname.down.sql
+        echo "" >> $migname.down.sql
       fi
     fi
   done
